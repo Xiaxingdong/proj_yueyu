@@ -1,0 +1,180 @@
+<!--
+1.页面布局
+使用 CSS Grid 布局，自动排列出 19 个声母卡片。
+声母顺序：
+b, p, m, f, d, t, n, l, g, k, ng, h, gw, kw, w, y, z, c, s
+
+2.交互行为
+点击任意一个卡片：
+该卡片放大、居中显示；
+其他卡片自动淡出（透明度变低）。
+点击背景或“关闭”按钮：
+回到 19 卡片总览布局。
+
+3.视觉风格
+每个卡片是圆角矩形；
+背景为柔和浅灰色；
+放大时带阴影与过渡动画；
+支持移动端自适应。-->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>粤语声母表 v0.8</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #f5f6fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 16px;
+      width: 90%;
+      max-width: 600px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 28px;
+      font-weight: bold;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      aspect-ratio: 1 / 1;
+    }
+
+    .card:hover {
+      background: #e8f0fe;
+      transform: scale(1.05);
+    }
+
+    /* 放大效果 */
+    .card.active {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(2.2);
+      z-index: 1000;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+      background: #fff;
+    }
+
+    /* 其他卡片淡出 */
+    .grid.dim .card:not(.active) {
+      opacity: 0.15;
+      transform: scale(0.9);
+      pointer-events: none;
+    }
+
+    /* 半透明背景层 */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 999;
+    }
+
+    .overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* 返回按钮 */
+    .close-btn {
+      position: fixed;
+      top: 20px;
+      right: 30px;
+      background: #ffffff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 14px;
+      display: none;
+      z-index: 1001;
+      transition: background 0.2s;
+    }
+
+    .close-btn:hover {
+      background: #eee;
+    }
+
+    .close-btn.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<div class="grid" id="grid">
+  <!-- 声母卡片 -->
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="close-btn" id="closeBtn">关闭</div>
+
+<script>
+  const initials = ["b","p","m","f","d","t","n","l","g","k","ng","h","gw","kw","w","y","z","c","s"];
+  const grid = document.getElementById('grid');
+  const overlay = document.getElementById('overlay');
+  const closeBtn = document.getElementById('closeBtn');
+
+  // 动态生成声母卡片
+  initials.forEach(ch => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.textContent = ch;
+    grid.appendChild(div);
+  });
+
+  // 点击卡片放大
+  grid.addEventListener('click', e => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+
+    card.classList.add('active');
+    grid.classList.add('dim');
+    overlay.classList.add('show');
+    closeBtn.classList.add('show');
+  });
+
+  // 关闭放大模式
+  function resetView() {
+    document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
+    grid.classList.remove('dim');
+    overlay.classList.remove('show');
+    closeBtn.classList.remove('show');
+  }
+
+  overlay.addEventListener('click', resetView);
+  closeBtn.addEventListener('click', resetView);
+</script>
+
+</body>
+</html>
+
+
+
+
+
+

@@ -1,0 +1,274 @@
+<!--v0.4.1 版本设计更新：
+图片横排展示时，图片会按原比例显示。
+点击任意图片时，会弹出一个新的弹窗，展示该图片的原始尺寸。-->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>粤语声母 b - 0.4.1 原型</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f6f7fb;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .card {
+      width: 90%;
+      max-width: 420px;
+      aspect-ratio: 7 / 4;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 20px 40px;
+    }
+
+    .letter {
+      font-size: 20vw;
+      font-weight: 600;
+      color: #222;
+      flex: 1;
+      text-align: center;
+    }
+
+    .links {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .links a {
+      text-decoration: none;
+      font-size: 20px;
+      color: #3a6ea5;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+
+    .links a:hover {
+      color: #2a4f7b;
+    }
+
+    /* 弹窗遮罩 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      max-width: 90%;
+      max-height: 80%;
+      overflow: auto;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .modal-content img {
+      max-width: 100%;
+      border-radius: 10px;
+      object-fit: contain; /* 确保图片按比例展示 */
+    }
+
+    .image-gallery {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap; /* 自动换行 */
+    }
+
+    .image-gallery img {
+      max-width: 120px;
+      border-radius: 10px;
+      cursor: pointer;
+      object-fit: contain; /* 确保等比例展示 */
+    }
+
+    .close {
+      margin-top: 10px;
+      cursor: pointer;
+      color: #3a6ea5;
+    }
+
+    /* 点击后的原图弹窗样式 */
+    .full-image-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .full-image-modal-content {
+      max-width: 90%;
+      max-height: 90%;
+    }
+
+    .full-image-modal-content img {
+      width: 100%;
+      height: auto;
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="letter">b</div>
+  <div class="links">
+    <a id="videoLink">视频</a>
+    <a id="audioLink">音频</a>
+    <a id="imageLink">图片</a>
+    <a id="textLink">文字</a>
+  </div>
+</div>
+
+<!-- 弹窗 - 视频 -->
+<div class="modal-overlay" id="videoModal">
+  <div class="modal-content">
+    <video id="videoPlayer" controls>
+      <source src="video.mp4" type="video/mp4">
+      你的浏览器不支持视频播放。
+    </video>
+    <div class="close" id="closeVideoModal">关闭</div>
+  </div>
+</div>
+
+<!-- 弹窗 - 音频 -->
+<div class="modal-overlay" id="audioModal">
+  <div class="modal-content">
+    <div>点击播放音频：</div>
+    <audio controls id="audioPlayer" src="b.mp3"></audio>
+    <div class="close" id="closeAudioModal">关闭</div>
+  </div>
+</div>
+
+<!-- 弹窗 - 图片 -->
+<div class="modal-overlay" id="imageModal">
+  <div class="modal-content">
+    <div class="image-gallery">
+      <img src="../img/png001.PNG" alt="b 发音示意图" onclick="openFullImageModal('../img/png001.PNG')" />
+      <img src="../img/png002.PNG" alt="图片1" onclick="openFullImageModal('../img/png002.PNG')" />
+      <img src="../img/png003.PNG" alt="图片2" onclick="openFullImageModal('../img/png003.PNG')" />
+      <img src="../img/png004.PNG" alt="图片3" onclick="openFullImageModal('../img/png004.PNG')" />
+    </div>
+    <div class="close" id="closeImageModal">关闭</div>
+  </div>
+</div>
+
+<!-- 弹窗 - 文字 -->
+<div class="modal-overlay" id="textModal">
+  <div class="modal-content">
+    <div>这里是 b 的发音技巧说明：</div>
+    <p>1. 唇紧闭，气流爆破；</p>
+    <p>2. 口腔适度张开，发出“b”音；</p>
+    <div class="close" id="closeTextModal">关闭</div>
+  </div>
+</div>
+
+<!-- 全屏图片弹窗 -->
+<div class="full-image-modal-overlay" id="fullImageModal">
+  <div class="full-image-modal-content">
+    <img id="fullImage" src="" alt="Full Size Image">
+    <div class="close" id="closeFullImageModal">关闭</div>
+  </div>
+</div>
+
+<script>
+  // 弹窗功能
+  function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const content = modal.querySelector('.modal-content');
+    modal.style.display = 'flex';
+    setTimeout(() => content.style.opacity = 1, 50); // 动画延时
+  }
+
+  function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const content = modal.querySelector('.modal-content');
+    content.style.opacity = 0;
+    setTimeout(() => modal.style.display = 'none', 300); // 关闭延时
+  }
+
+  // 视频弹窗
+  document.getElementById('videoLink').addEventListener('click', function() {
+    openModal('videoModal');
+  });
+  document.getElementById('closeVideoModal').addEventListener('click', function() {
+    closeModal('videoModal');
+  });
+
+  // 音频弹窗
+  document.getElementById('audioLink').addEventListener('click', function() {
+    openModal('audioModal');
+  });
+  document.getElementById('closeAudioModal').addEventListener('click', function() {
+    closeModal('audioModal');
+  });
+
+  // 图片弹窗
+  document.getElementById('imageLink').addEventListener('click', function() {
+    openModal('imageModal');
+  });
+  document.getElementById('closeImageModal').addEventListener('click', function() {
+    closeModal('imageModal');
+  });
+
+  // 文字弹窗
+  document.getElementById('textLink').addEventListener('click', function() {
+    openModal('textModal');
+  });
+  document.getElementById('closeTextModal').addEventListener('click', function() {
+    closeModal('textModal');
+  });
+
+  // 点击遮罩层也可以关闭弹窗
+  const overlays = document.querySelectorAll('.modal-overlay');
+  overlays.forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        closeModal(overlay.id);
+      }
+    });
+  });
+
+  // 打开全屏图片
+  function openFullImageModal(imageSrc) {
+    const fullImageModal = document.getElementById('fullImageModal');
+    const fullImage = document.getElementById('fullImage');
+    fullImage.src = imageSrc;
+    fullImageModal.style.display = 'flex';
+  }
+
+  // 关闭全屏图片
+  document.getElementById('closeFullImageModal').addEventListener('click', function() {
+    const fullImageModal = document.getElementById('fullImageModal');
+    fullImageModal.style.display = 'none';
+  });
+</script>
+
+</body>
+</html>

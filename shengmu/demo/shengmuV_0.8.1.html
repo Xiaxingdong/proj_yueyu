@@ -1,0 +1,295 @@
+<!--动态渲染 19 个声母卡片
+点击任意卡片 → 居中放大显示
+放大后展示四个入口（视频、音频、图片、文字）
+点击任意入口 → 弹出对应内容弹窗
+点击背景或关闭按钮 → 返回总览状态-->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>粤语声母表 v0.9.1</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #f5f6fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 16px;
+      width: 90%;
+      max-width: 600px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      font-size: 28px;
+      font-weight: bold;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      aspect-ratio: 1 / 1;
+      position: relative;
+    }
+
+    .card:hover {
+      background: #e8f0fe;
+      transform: scale(1.05);
+    }
+
+    /* 放大效果 */
+    .card.active {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(2.2);
+      z-index: 1000;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+      background: #fff;
+      justify-content: center;
+    }
+
+    /* 其他卡片淡出 */
+    .grid.dim .card:not(.active) {
+      opacity: 0.15;
+      transform: scale(0.9);
+      pointer-events: none;
+    }
+
+    /* 半透明背景层 */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 999;
+    }
+
+    .overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* 返回按钮 */
+    .close-btn {
+      position: fixed;
+      top: 20px;
+      right: 30px;
+      background: #ffffff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 14px;
+      display: none;
+      z-index: 1001;
+      transition: background 0.2s;
+    }
+
+    .close-btn:hover {
+      background: #eee;
+    }
+
+    .close-btn.show {
+      display: block;
+    }
+
+    /* 放大后详情层 */
+    .letter {
+      font-size: 32px;
+      font-weight: bold;
+    }
+
+    .detail {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .card.active .detail.show {
+      display: flex;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .action {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      font-size: 22px;
+      color: #3a6ea5;
+      transition: transform 0.2s;
+    }
+
+    .action:hover {
+      transform: scale(1.1);
+    }
+
+    .action span {
+      font-size: 14px;
+      color: #444;
+      margin-top: 4px;
+    }
+
+    /* 弹窗样式 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .modal-content video,
+    .modal-content img,
+    .modal-content audio {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="grid" id="grid"></div>
+<div class="overlay" id="overlay"></div>
+<div class="close-btn" id="closeBtn">关闭</div>
+
+<script>
+  const initials = ["b","p","m","f","d","t","n","l","g","k","ng","h","gw","kw","w","y","z","c","s"];
+  const grid = document.getElementById('grid');
+  const overlay = document.getElementById('overlay');
+  const closeBtn = document.getElementById('closeBtn');
+
+  // 初始化 19 个声母卡片
+  initials.forEach(ch => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.letter = ch;
+    card.innerHTML = `
+        <div class="letter">${ch}</div>
+        <div class="detail">
+          <div class="action-row">
+            <div class="action" onclick="openModal('video', '${ch}')">🎬<span>视频</span></div>
+            <div class="action" onclick="openModal('audio', '${ch}')">🔊<span>音频</span></div>
+            <div class="action" onclick="openModal('image', '${ch}')">🖼<span>图片</span></div>
+            <div class="action" onclick="openModal('text', '${ch}')">📖<span>文字</span></div>
+          </div>
+        </div>
+      `;
+    grid.appendChild(card);
+  });
+
+  // 点击卡片放大
+  grid.addEventListener('click', e => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+
+    card.classList.add('active');
+    grid.classList.add('dim');
+    overlay.classList.add('show');
+    closeBtn.classList.add('show');
+
+    const detail = card.querySelector('.detail');
+    if (detail) detail.classList.add('show');
+  });
+
+  // 恢复视图
+  function resetView() {
+    document.querySelectorAll('.card.active').forEach(c => {
+      c.classList.remove('active');
+      const detail = c.querySelector('.detail');
+      if (detail) detail.classList.remove('show');
+    });
+    grid.classList.remove('dim');
+    overlay.classList.remove('show');
+    closeBtn.classList.remove('show');
+  }
+
+  overlay.addEventListener('click', resetView);
+  closeBtn.addEventListener('click', resetView);
+
+  // 弹窗逻辑
+  function openModal(type, letter) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay show';
+
+    let content = '';
+    if (type === 'video') {
+      content = `
+          <div class="modal-content">
+            <h3>${letter} 的教学视频</h3>
+            <video controls src="video_${letter}.mp4"></video>
+            <div class="close" onclick="this.closest('.modal-overlay').remove()">关闭</div>
+          </div>`;
+    } else if (type === 'audio') {
+      content = `
+          <div class="modal-content">
+            <h3>${letter} 的发音音频</h3>
+            <audio controls src="audio_${letter}.mp3"></audio>
+            <div class="close" onclick="this.closest('.modal-overlay').remove()">关闭</div>
+          </div>`;
+    } else if (type === 'image') {
+      content = `
+          <div class="modal-content">
+            <h3>${letter} 相关图片</h3>
+            <img src="image_${letter}.png" alt="${letter} 图片">
+            <div class="close" onclick="this.closest('.modal-overlay').remove()">关闭</div>
+          </div>`;
+    } else if (type === 'text') {
+      content = `
+          <div class="modal-content">
+            <h3>${letter} 的发音技巧</h3>
+            <p>（此处填写该声母的口型、舌位、气流说明）</p>
+            <div class="close" onclick="this.closest('.modal-overlay').remove()">关闭</div>
+          </div>`;
+    }
+
+    modal.innerHTML = content;
+    document.body.appendChild(modal);
+  }
+</script>
+</body>
+</html>
+
+
