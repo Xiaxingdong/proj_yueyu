@@ -1,0 +1,171 @@
+<!--图标容器 .icons 变成 2×2 网格，内部 inset:6px 让内容永远在边框内；
+图标 .icon 用 百分比 + aspect-ratio 自缩放，再窄也能显示四个；
+table-layout: fixed 让列宽稳定，避免缩小时列宽抖动引发重排。-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>粤语韵母表 v0.3.2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: "PingFang SC","Microsoft YaHei",sans-serif;
+      background:#f7f8fb;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+    }
+
+    /* 关键：固定布局，列宽稳定 */
+    table { border-collapse: collapse; width: 95%; max-width: 900px; background: #fff; table-layout: fixed; }
+
+    /* 单元格高度随屏幕缩放，避免太矮挤爆 */
+    th, td {
+      border: 1px solid #ccc;
+      width: 12.5%;
+      height: clamp(60px, 9vw, 84px);  /* ← 小屏更矮，大屏更高 */
+      text-align: center;
+      vertical-align: middle;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;                /* 仍然需要防溢出 */
+      perspective: 800px;
+    }
+
+    /* 翻转容器 & 两面（与之前一致，略） */
+    .flip-card { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .6s ease; }
+    td.show .flip-card { transform: rotateY(180deg); }
+    .front, .back {
+      position: absolute; inset: 0; display: flex; justify-content: center; align-items: center;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 6px;
+    }
+    .front { background:#fff; transform: rotateY(0deg) translateZ(1px); font-size: clamp(14px, 2.2vw, 20px); font-weight: 700; }
+    .back  { background:#e8f0fe; transform: rotateY(180deg) translateZ(1px); padding: 6px; box-sizing: border-box; }
+
+    /* ✅ 背面：2×2 自适应网格，怎么窄都能塞下四个 */
+    .icons{
+      position: absolute; inset: 6px;            /* 四周留白，避免被边框裁 */
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);     /* 两列 */
+      grid-template-rows: repeat(2, 1fr);        /* 两行 */
+      gap: 8px;
+      place-items: center;
+    }
+
+    /* 每个图标占据各自网格单元的 80% 尺寸，并设上限 */
+    .icon{
+      width: 80%;
+      aspect-ratio: 1 / 1;                       /* 始终正圆 */
+      max-width: 36px;                            /* 大屏不超过 36px */
+      background: #fff;
+      border-radius: 50%;
+      display: flex; justify-content: center; align-items: center;
+      font-size: clamp(12px, 2.6vw, 16px);        /* 文字也跟着缩 */
+      box-shadow: 0 1px 3px rgba(0,0,0,.15);
+      transition: transform .2s;
+    }
+    .icon:hover { transform: scale(1.12); }
+
+    th {
+      background:#f0f0f0;
+      font-weight:bold;
+    }
+
+    .flip-card {
+      position:absolute;
+      inset:0;
+      transform-style:preserve-3d;
+      transition:transform 0.6s ease;
+    }
+
+    .flipped { transform:rotateY(180deg); }
+
+    .front, .back {
+      position:absolute;
+      inset:0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      backface-visibility:hidden;
+      border-radius:6px;
+    }
+
+    .front {
+      background:#fff;
+      font-size:clamp(14px, 2.2vw, 20px);
+      font-weight:bold;
+      color:#333;
+    }
+
+    .back {
+      background:#e8f0fe;
+      transform:rotateY(180deg);
+      flex-direction:column;
+      padding:4px;
+    }
+
+    /* 📱 手机端适配 */
+    @media (max-width:600px) {
+      th, td { height:60px; }
+      .icon { gap:4px; }
+    }
+
+
+
+  </style>
+</head>
+<body>
+
+<table>
+  <thead>
+  <tr>
+    <th></th><th>a</th><th>o</th><th>e</th><th>oe</th><th>i</th><th>u</th><th>yu</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr><td>aai</td><td>ai</td><td>oi</td><td>ei</td><td>oey</td><td></td><td>ui</td><td></td></tr>
+  <tr><td>aau</td><td>au</td><td>ou</td><td></td><td></td><td>iu</td><td></td><td></td></tr>
+  <tr><td>aam</td><td>am</td><td></td><td></td><td></td><td>im</td><td></td><td></td></tr>
+  <tr><td>aan</td><td>an</td><td>on</td><td></td><td>oen</td><td>in</td><td>un</td><td>yun</td></tr>
+  <tr><td>aang</td><td>ang</td><td>ong</td><td>eng</td><td>oeng</td><td>ing</td><td>ung</td><td>yung</td></tr>
+  <tr><td>aab</td><td>ab</td><td></td><td></td><td></td><td>ib</td><td></td><td></td></tr>
+  <tr><td>aad</td><td>ad</td><td>od</td><td></td><td>oed</td><td>id</td><td>ud</td><td>yud</td></tr>
+  <tr><td>aag</td><td>ag</td><td>og</td><td>eg</td><td>oeg</td><td>ig</td><td>ug</td><td>yug</td></tr>
+  </tbody>
+</table>
+
+<script>
+  document.querySelectorAll("td").forEach(td=>{
+    const val = td.textContent.trim();
+    if(!val) return;
+
+    const flip = document.createElement("div");
+    flip.className = "flip-card";
+    const front = document.createElement("div");
+    front.className = "front";
+    front.textContent = val;
+
+    const back = document.createElement("div");
+    back.className = "back";
+    back.innerHTML = `
+      <div class="icons">
+        <div class="icon" title="视频">🎬</div>
+        <div class="icon" title="音频">🔊</div>
+        <div class="icon" title="图片">🖼️</div>
+        <div class="icon" title="文字">📖</div>
+      </div>
+    `;
+    flip.appendChild(front);
+    flip.appendChild(back);
+    td.innerHTML = "";
+    td.appendChild(flip);
+
+    td.addEventListener("click", () => {
+      flip.classList.toggle("flipped");
+    });
+  });
+</script>
+
+</body>
+</html>

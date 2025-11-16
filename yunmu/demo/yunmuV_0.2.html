@@ -1,0 +1,133 @@
+<body>
+<div class="grid" id="grid"></div>
+<div class="overlay" id="overlay"></div>
+<div class="close-btn" id="closeBtn">关闭</div>
+
+<style>
+  /* 7 列固定网格，严格按列渲染 */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* a o e oe i u yu */
+    gap: 16px;
+    width: 92%;
+    max-width: 960px;
+    margin: 24px auto;
+    position: relative;
+  }
+  .card{background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    aspect-ratio:1/1;font-size:22px;font-weight:700;color:#333;cursor:pointer;
+    transition:.2s}
+  .card:hover{transform:scale(1.05);background:#e8f0fe}
+  .card.active{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(2.1);
+    z-index:1000;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+  .grid.dim .card:not(.active){opacity:.15;pointer-events:none;transform:scale(.95)}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.2);opacity:0;visibility:hidden;transition:.2s;z-index:999}
+  .overlay.show{opacity:1;visibility:visible}
+  .close-btn{position:fixed;top:20px;right:28px;background:#fff;border:1px solid #ddd;border-radius:8px;padding:6px 10px;
+    display:none;z-index:1001}
+  .close-btn.show{display:block}
+  .detail{display:none;margin-top:8px}
+  .card.active .detail{display:block}
+</style>
+
+<script>
+  // 列标题：a | o | e | oe | i | u | yu  —— 用于人类参考（不渲染）
+  const COLS = ["a","o","e","oe","i","u","yu"];
+
+  // 显示值 -> 实际音频文件名（把 b/d/g 映射到 p/t/k；oey->eoi，oen->eon，oeg->oek，oed->eot）
+  const display2key = s => ({
+    aab:"aap", aat:"aat", aak:"aak",  // aa 系
+    ib:"ip",  id:"it",  ig:"ik",
+    od:"ot",  og:"ok",
+    ud:"ut",  ug:"uk",
+    yud:"yut",
+    oey:"eoi", oen:"eon", oeg:"oek", oed:"eot"
+  }[s] || s);
+
+  // —— 53 个韵母，按图片阅读顺序排位（col 从 1 开始，row 从 1 开始）
+  // 列顺序固定为：1 a | 2 o | 3 e | 4 oe | 5 i | 6 u | 7 yu
+  const finals = [
+    // a 列（aa 系在上；短 a 系其后）
+    {d:"aa", col:1, row:1},{d:"aai",col:1,row:2},{d:"aau",col:1,row:3},
+    {d:"aam",col:1,row:4},{d:"aan",col:1,row:5},{d:"aang",col:1,row:6},
+    {d:"aab",col:1,row:7},{d:"aat",col:1,row:8},{d:"aak",col:1,row:9},
+    {d:"ai", col:1,row:11},{d:"au", col:1,row:12},{d:"am", col:1,row:13},
+    {d:"an", col:1,row:14},{d:"ang",col:1,row:15},{d:"ap", col:1,row:16},
+    {d:"at", col:1,row:17},{d:"ak", col:1,row:18},
+
+    // o 列
+    {d:"o",  col:2,row:1},
+    {d:"oi", col:2,row:2},{d:"on", col:2,row:3},{d:"ong",col:2,row:4},
+    {d:"od", col:2,row:5},{d:"og", col:2,row:6},
+
+    // e 列
+    {d:"e",  col:3,row:1},{d:"ei", col:3,row:2},
+    {d:"eng",col:3,row:3},{d:"ek", col:3,row:4},
+
+    // oe 列（注意显示用 oey/oen/oeg/oed，但音频是 eoi/eon/oek/eot）
+    {d:"oe", col:4,row:1},{d:"oey",col:4,row:2},{d:"oen",col:4,row:3},
+    {d:"oeng",col:4,row:4},{d:"oeg",col:4,row:5},{d:"oed",col:4,row:6},
+
+    // i 列
+    {d:"i",  col:5,row:1},{d:"iu", col:5,row:2},
+    {d:"im", col:5,row:3},{d:"in", col:5,row:4},{d:"ing",col:5,row:5},
+    {d:"ib", col:5,row:6},{d:"id", col:5,row:7},{d:"ig", col:5,row:8},
+
+    // u 列
+    {d:"u",  col:6,row:1},{d:"ui", col:6,row:2},
+    {d:"un", col:6,row:3},{d:"ung",col:6,row:4},
+    {d:"ud", col:6,row:5},{d:"ug", col:6,row:6},
+
+    // yu 列
+    {d:"yu", col:7,row:1},{d:"yun",col:7,row:2},{d:"yud",col:7,row:3},
+  ];
+
+  const grid = document.getElementById('grid');
+  const overlay = document.getElementById('overlay');
+  const closeBtn = document.getElementById('closeBtn');
+
+  // 生成卡片（使用 grid 定位）
+  finals.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.gridColumn = item.col;
+    card.style.gridRow = item.row;
+    card.dataset.key = display2key(item.d); // 真正的音频 key
+    card.innerHTML = `
+        <div class="letter">${item.d}</div>
+        <div class="detail">
+          <div style="margin-top:8px;font-size:18px;color:#3a6ea5">🔊 点击播放</div>
+        </div>`;
+    grid.appendChild(card);
+  });
+
+  // 放大/还原
+  grid.addEventListener('click', e => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    card.classList.add('active');
+    grid.classList.add('dim');
+    overlay.classList.add('show');
+    closeBtn.classList.add('show');
+
+    // 播放并在结束时“弹回去”
+    play(card.dataset.key).then(() => resetView());
+  });
+
+  function resetView(){
+    document.querySelectorAll('.card.active').forEach(c=>c.classList.remove('active'));
+    grid.classList.remove('dim'); overlay.classList.remove('show'); closeBtn.classList.remove('show');
+  }
+  overlay.addEventListener('click', resetView);
+  closeBtn.addEventListener('click', resetView);
+
+  function play(key){
+    return new Promise(res=>{
+      const audio = new Audio(`audio/${key}.mp3`);
+      audio.addEventListener('ended', res, {once:true});
+      audio.play().catch(()=>res()); // 没有音频也直接复位
+    });
+  }
+</script>
+</body>

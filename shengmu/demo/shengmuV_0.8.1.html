@@ -259,7 +259,7 @@
       content = `
           <div class="modal-content">
             <h3>${letter} 的教学视频</h3>
-            <video controls src="video_${letter}.mp4"></video>
+            <video controls src="../video/video_${letter}.mp4"></video>
             <div class="close" onclick="this.closest('.modal-overlay').remove()">关闭</div>
           </div>`;
     } else if (type === 'audio') {
@@ -273,7 +273,7 @@
       content = `
           <div class="modal-content">
             <h3>${letter} 相关图片</h3>
-            <img src="image_${letter}.png" alt="${letter} 图片">
+            <img src="../img/png001.PNG" alt="${letter} 图片">
             <div class="close" onclick="this.closest('.modal-overlay').remove()">关闭</div>
           </div>`;
     } else if (type === 'text') {

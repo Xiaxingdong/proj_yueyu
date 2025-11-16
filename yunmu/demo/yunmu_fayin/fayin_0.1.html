@@ -1,0 +1,99 @@
+<!--点击一个格子 = 播放对应韵母的音频-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>粤语韵母表 v0.6（点击发音版）</title>
+  <style>
+    body {
+      font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+      background:#f7f8fb;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      margin:0;
+      overflow:hidden;
+    }
+    table {
+      border-collapse:collapse;
+      width:90vw;
+      max-width:900px;
+      background:#fff;
+      table-layout:fixed;
+    }
+    th,td {
+      border:1px solid #ccc;
+      width:12.5%;
+      height:clamp(60px,9vw,84px);
+      text-align:center;
+      vertical-align:middle;
+      cursor:pointer;
+      font-size:20px;
+      font-weight:bold;
+      color:#333;
+    }
+    th {
+      background:#f0f0f0;
+      font-weight:bold;
+    }
+    td:hover {
+      background:#e8f0fe;
+    }
+  </style>
+</head>
+<body>
+<div class="title">粤语韵母发音表</div>
+<table>
+  <thead>
+  <tr>
+    <td></td><td>a</td><td>o</td><td>e</td><td>oe</td><td>i</td><td>u</td><td>yu</td>
+  </tr>
+  </thead>
+  <tbody>
+  <tr><td>aai</td><td>ai</td><td>oi</td><td>ei</td><td>oey</td><td></td><td>ui</td><td></td></tr>
+  <tr><td>aau</td><td>au</td><td>ou</td><td></td><td></td><td>iu</td><td></td><td></td></tr>
+  <tr><td>aam</td><td>am</td><td></td><td></td><td></td><td>im</td><td></td><td></td></tr>
+  <tr><td>aan</td><td>an</td><td>on</td><td></td><td>oen</td><td>in</td><td>un</td><td>yun</td></tr>
+  <tr><td>aang</td><td>ang</td><td>ong</td><td>eng</td><td>oeng</td><td>ing</td><td>ung</td><td>yung</td></tr>
+  <tr><td>aab</td><td>ab</td><td></td><td></td><td></td><td>ib</td><td></td><td></td></tr>
+  <tr><td>aad</td><td>ad</td><td>od</td><td></td><td>oed</td><td>id</td><td>ud</td><td>yud</td></tr>
+  <tr><td>aag</td><td>ag</td><td>og</td><td>eg</td><td>oeg</td><td>ig</td><td>ug</td><td>yug</td></tr>
+  </tbody>
+</table>
+
+<script>
+  let currentAudio = null; // 当前播放的音频实例
+
+  function playSound(name) {
+    // 如果正在播放别的音频，立即停止
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0; // 回到开头
+    }
+
+    // 播放新的音频
+    const audio = new Audio(`audio/${name}.mp3`);
+    currentAudio = audio;
+    audio.play().catch(()=>{});
+
+    // 播放完自动清理
+    audio.addEventListener("ended", () => {
+      if (currentAudio === audio) {
+        currentAudio = null;
+      }
+    });
+  }
+
+  // 给所有单元格绑定点击播放
+  document.querySelectorAll("td").forEach(td => {
+    const val = td.textContent.trim();
+    if (!val) return;
+    td.addEventListener("click", () => playSound(val));
+  });
+
+</script>
+
+</body>
+</html>

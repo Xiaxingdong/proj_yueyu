@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>粤语韵母表 v0.6.3（点击发音版）</title>
+  <style>
+    html,body {
+      height:100%;
+      margin:0;
+      overscroll-behavior:none;
+    }
+    body {
+      font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+      background:#f7f8fb;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      overflow:hidden;
+    }
+
+    /* 🔹 外部容器，保持垂直整体居中 */
+    .container {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:20px;
+    }
+
+    /* 🔹 标题样式：保持极简 + 教学风 */
+    .title {
+      font-size:28px;
+      font-weight:700;
+      color:#333;
+      text-align:center;
+      letter-spacing:2px;
+    }
+
+    table {
+      border-collapse:collapse;
+      width:90vw;
+      max-width:900px;
+      background:#fff;
+      table-layout:fixed;
+    }
+    th,td {
+      border:1px solid #ccc;
+      width:12.5%;
+      height:clamp(60px,9vw,84px);
+      text-align:center;
+      vertical-align:middle;
+      cursor:pointer;
+      font-size:20px;
+      font-weight:bold;
+      color:#333;
+    }
+    th { background:#f0f0f0;font-weight:bold; }
+    td:hover { background:#e8f0fe; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- 🔹 标题 -->
+  <div class="title">粤语韵母发音表</div>
+
+  <table>
+    <thead>
+    <tr>
+      <td></td><td>a</td><td>o</td><td>e</td><td>oe</td><td>i</td><td>u</td><td>yu</td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr><td>aai</td><td>ai</td><td>oi</td><td>ei</td><td>oey</td><td></td><td>ui</td><td></td></tr>
+    <tr><td>aau</td><td>au</td><td>ou</td><td></td><td></td><td>iu</td><td></td><td></td></tr>
+    <tr><td>aam</td><td>am</td><td></td><td></td><td></td><td>im</td><td></td><td></td></tr>
+    <tr><td>aan</td><td>an</td><td>on</td><td></td><td>oen</td><td>in</td><td>un</td><td>yun</td></tr>
+    <tr><td>aang</td><td>ang</td><td>ong</td><td>eng</td><td>oeng</td><td>ing</td><td>ung</td><td>yung</td></tr>
+    <tr><td>aab</td><td>ab</td><td></td><td></td><td></td><td>ib</td><td></td><td></td></tr>
+    <tr><td>aad</td><td>ad</td><td>od</td><td></td><td>oed</td><td>id</td><td>ud</td><td>yud</td></tr>
+    <tr><td>aag</td><td>ag</td><td>og</td><td>eg</td><td>oeg</td><td>ig</td><td>ug</td><td>yug</td></tr>
+    </tbody>
+  </table>
+
+</div>
+
+<script>
+  let currentAudio = null; // 单通道播放：新音频打断旧音频
+
+  function playSound(name) {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+    const audio = new Audio(`audio/${name}.mp3`);
+    currentAudio = audio;
+    audio.play().catch(()=>{});
+    audio.addEventListener("ended", () => {
+      if (currentAudio === audio) currentAudio = null;
+    });
+  }
+
+  document.querySelectorAll("td").forEach(td => {
+    const val = td.textContent.trim();
+    if (!val) return;
+    td.addEventListener("click", () => playSound(val));
+  });
+</script>
+
+</body>
+</html>
